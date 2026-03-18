@@ -359,6 +359,10 @@ module.exports = function (webpackEnv) {
           'scheduler/tracing': 'scheduler/tracing-profiling',
         }),
         fxaCryptoDeriver: require.resolve('@fxa/vendored/crypto-relier/esm'),
+        '@fxa/shared/l10n': path.resolve(
+          __dirname,
+          '../../../libs/shared/l10n/src'
+        ),
         ...(modules.webpackAliases || {}),
       },
       plugins: [
@@ -396,7 +400,11 @@ module.exports = function (webpackEnv) {
         // Handle node_modules packages that contain sourcemaps
         shouldUseSourceMap && {
           enforce: 'pre',
-          exclude: /@babel(?:\/|\\{1,2})runtime/,
+          exclude: [
+            /@babel(?:\/|\\{1,2})runtime/,
+            /node_modules\/fxa-pairing-channel/,
+            /node_modules\/incremental-encoder/,
+          ],
           test: /\.(js|mjs|jsx|ts|tsx|css)$/,
           loader: require.resolve('source-map-loader'),
         },

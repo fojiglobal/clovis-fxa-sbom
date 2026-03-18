@@ -5,10 +5,9 @@
 import React from 'react';
 import Pair from '.';
 import { Meta } from '@storybook/react';
-import AppLayout from '../../../components/AppLayout';
 import { LocationProvider } from '@reach/router';
 import { ENTRYPOINTS } from '../../../constants';
-import { MOCK_ERROR, MOCK_CALLBACK } from './mocks';
+import { MOCK_ERROR } from './mocks';
 import { withLocalization } from 'fxa-react/lib/storybooks';
 
 export default {
@@ -19,31 +18,21 @@ export default {
 
 export const Default = () => (
   <LocationProvider>
-    <AppLayout>
-      <Pair
-        entryPoint={ENTRYPOINTS.FIREFOX_FX_VIEW_ENTRYPOINT}
-        onSubmit={MOCK_CALLBACK}
-      />
-    </AppLayout>
+    <Pair entryPoint={ENTRYPOINTS.FIREFOX_FX_VIEW_ENTRYPOINT} />
   </LocationProvider>
 );
 
 export const WithoutQRCode = () => (
   <LocationProvider>
-    <AppLayout>
-      <Pair onSubmit={MOCK_CALLBACK} />
-    </AppLayout>
+    <Pair />
   </LocationProvider>
 );
 
 export const WithError = () => (
   <LocationProvider>
-    <AppLayout>
-      <Pair
-        entryPoint={ENTRYPOINTS.FIREFOX_FX_VIEW_ENTRYPOINT}
-        error={MOCK_ERROR}
-        onSubmit={MOCK_CALLBACK}
-      />
-    </AppLayout>
+    <Pair
+      entryPoint={ENTRYPOINTS.FIREFOX_FX_VIEW_ENTRYPOINT}
+      error={MOCK_ERROR}
+    />
   </LocationProvider>
 );

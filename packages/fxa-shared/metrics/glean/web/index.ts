@@ -157,6 +157,12 @@ export const eventsMap = {
     success: 'third_party_auth_set_password_success',
   },
 
+  cad: {
+    view: 'cad_view',
+    submit: 'cad_submit',
+    startbrowsingSubmit: 'cad_startbrowsing_submit',
+  },
+
   cadMobilePair: {
     view: 'cad_mobile_pair_view',
     submit: 'cad_mobile_pair_submit',
@@ -171,6 +177,12 @@ export const eventsMap = {
   },
 
   cadFireFox: {
+    view: 'cad_firefox_view',
+    choiceView: 'cad_firefox_choice_view',
+    choiceEngage: 'cad_firefox_choice_engage',
+    choiceSubmit: 'cad_firefox_choice_submit',
+    choiceNotnowSubmit: 'cad_firefox_choice_notnow_submit',
+    syncDeviceSubmit: 'cad_firefox_sync_device_submit',
     notnowSubmit: 'cad_firefox_notnow_submit',
   },
 

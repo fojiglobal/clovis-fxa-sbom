@@ -16,10 +16,11 @@ export const PAIRING_REDIRECT_URI =
 export const TIMEOUTS = {
   ELEMENT_FIND: 15_000,
   ASYNC_SCRIPT: 15_000,
-  SIGNED_IN_CHECK: 10_000,
+  SIGNED_IN_CHECK: 15_000,
   SUPPLICANT_ALLOW: 30_000,
   AUTHORITY_COMPLETE: 15_000,
   POLL_INTERVAL: 500,
+  POLL_INTERVAL_MAX: 2_000,
 } as const;
 
 export const SELECTORS = {
@@ -30,10 +31,19 @@ export const SELECTORS = {
   ],
   PASSWORD_INPUT: ['input[type="password"]', 'input[name="password"]'],
   SUBMIT_BUTTON: ['button[type="submit"]'],
-  AUTHORITY_APPROVE: ['#auth-approve-btn', 'button[type="submit"]'],
+  AUTHORITY_APPROVE: [
+    '[data-testid="pair-auth-approve-btn"]',
+    '#auth-approve-btn',
+    'button[type="submit"]',
+  ],
   TOTP_INPUT: [
     'input.totp-code',
     'input[name="code"]',
     'input[type="text"][maxlength="6"]',
   ],
+  // /pair index choice screen
+  PAIR_CHOICE_HEADER: ['#pair-header'],
+  PAIR_RADIO_HAS_MOBILE: ['#has-mobile'],
+  PAIR_RADIO_NEEDS_MOBILE: ['#needs-mobile'],
+  PAIR_CONTINUE_BUTTON: ['#set-needs-mobile'],
 } as const;
