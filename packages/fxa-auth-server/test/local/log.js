@@ -804,7 +804,7 @@ describe('log', () => {
         name: 'test',
         stdout: { on: sinon.spy() },
         nodeTracer: {
-          getTraceId: sinon.stub().callsFake(() => 'fake trace id'),
+          getTraceParentId: sinon.stub().callsFake(() => 'fake trace id'),
         },
       });
 
