@@ -49,7 +49,8 @@ function getScopeServices(scope: string[] | null): ScopeService[] {
   return services;
 }
 
-const iconClasses = 'flex w-10 justify-center items-center flex-0';
+const iconClasses =
+  'flex w-10 justify-center items-center flex-0 text-grey-700 dark:text-grey-100';
 
 export function Service({
   name,
@@ -139,7 +140,7 @@ export function Service({
       data-testid="settings-connected-service"
       data-name={name}
     >
-      <div className="border-2 border-solid border-grey-100 rounded">
+      <div className="border-2 border-solid border-grey-100 dark:border-grey-700 rounded">
         <div className="p-4 flex mobileLandscape:justify-around items-center flex-col mobileLandscape:flex-row">
           <div className="flex flex-grow w-full mobileLandscape:flex-2">
             <span className={classNames(iconClasses, 'px-2')}>{Icon}</span>
