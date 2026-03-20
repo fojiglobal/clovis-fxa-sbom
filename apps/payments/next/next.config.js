@@ -25,7 +25,6 @@ const nextConfig = {
   },
   distDir: 'build',
   experimental: {
-    instrumentationHook: true,
     optimizePackageImports: ['@radix-ui/react-form', '@radix-ui/react-tooltip'],
     serverComponentsExternalPackages: [
       'axios',

@@ -11,8 +11,8 @@ import { PaymentsEmitterEventsKeysType } from '@fxa/payments/events';
 
 async function recordEmitterEventAction(
   eventName: 'checkoutSubmit',
-  params: Record<string, string | string[]>,
-  searchParams: Record<string, string | string[]>,
+  params: Record<string, string | string[] | undefined>,
+  searchParams: Record<string, string | string[] | undefined>,
   paymentProvider: PaymentProvidersType,
   isFreeTrial?: boolean
 ): Promise<void>;
@@ -22,20 +22,20 @@ async function recordEmitterEventAction(
     | 'checkoutEngage'
     | 'checkoutSuccess'
     | 'checkoutFail',
-  params: Record<string, string | string[]>,
-  searchParams: Record<string, string | string[]>,
+  params: Record<string, string | string[] | undefined>,
+  searchParams: Record<string, string | string[] | undefined>,
   paymentProvider?: undefined,
   isFreeTrial?: boolean
 ): Promise<void>;
 async function recordEmitterEventAction(
   eventName: PaymentsEmitterEventsKeysType,
-  params: Record<string, string | string[]>,
-  searchParams: Record<string, string | string[]>,
+  params: Record<string, string | string[] | undefined>,
+  searchParams: Record<string, string | string[] | undefined>,
   paymentProvider?: PaymentProvidersType,
   isFreeTrial?: boolean
 ) {
   const requestArgs = {
-    ...getAdditionalRequestArgs(),
+    ...(await getAdditionalRequestArgs()),
     isFreeTrial: isFreeTrial ?? false,
     params: flattenRouteParams(params),
     searchParams: flattenRouteParams(searchParams),

@@ -37,18 +37,20 @@ export default async function Manage({
   params,
   searchParams,
 }: {
-  params: ManageParams;
-  searchParams: Record<string, string | string[]> | undefined;
+  params: Promise<ManageParams>;
+  searchParams: Promise<Record<string, string | string[]> | undefined>;
 }) {
-  const { locale } = params;
-  const acceptLanguage = headers().get('accept-language');
+  const resolvedParams = await params;
+  const resolvedSearchParams = await searchParams;
+  const { locale } = resolvedParams;
+  const acceptLanguage = (await headers()).get('accept-language');
   const l10n = getApp().getL10n(acceptLanguage, locale);
   const session = await auth();
   if (!session?.user?.id) {
     const redirectToUrl = new URL(
       `${config.paymentsNextHostedUrl}/${locale}/subscriptions/landing`
     );
-    redirectToUrl.search = new URLSearchParams(searchParams).toString();
+    redirectToUrl.search = new URLSearchParams(resolvedSearchParams).toString();
     redirect(redirectToUrl.href);
   }
 
@@ -57,7 +59,7 @@ export default async function Manage({
   const experiments = await getExperimentsAction({
     fxaUid: userId,
     language: locale,
-    experimentationPreview: searchParams?.experimentationPreview === 'true',
+    experimentationPreview: resolvedSearchParams?.experimentationPreview === 'true',
   });
 
   const {
@@ -67,7 +69,7 @@ export default async function Manage({
     subscriptions,
     appleIapSubscriptions,
     googleIapSubscriptions,
-  } = await getSubManPageContentAction(session.user?.id, { ...params }, { ...searchParams }, acceptLanguage, locale);
+  } = await getSubManPageContentAction(session.user?.id, { ...resolvedParams }, { ...resolvedSearchParams }, acceptLanguage, locale);
   const {
     billingAgreementId,
     brand,
