@@ -26,7 +26,7 @@ import {
   isSyncDesktopV3Integration,
   isWebIntegration,
 } from '../../../models';
-import { getSyncNavigate, handleNavigation } from '../utils';
+import { getSyncNavigate, handleNavigation, ensureCanLinkAcountOrRedirect } from '../utils';
 import firefox from '../../../lib/channels/firefox';
 import { useWebRedirect } from '../../../lib/hooks/useWebRedirect';
 import VerificationMethods from '../../../constants/verification-methods';
@@ -194,6 +194,21 @@ const SigninPasswordlessCode = ({
           };
           currentAccount(accountData);
           setCurrentAccount(result.uid);
+
+          // For existing users signing into Sync (signin flow), show merge warning
+          // before navigating to set password. For signup flows, the warning was
+          // already shown on the email-first page.
+          if (!isSignup && integration.isSync()) {
+            const canLink = await ensureCanLinkAcountOrRedirect({
+              email,
+              uid: result.uid,
+              ftlMsgResolver,
+              navigateWithQuery,
+            });
+            if (!canLink) {
+              return;
+            }
+          }
 
           if (result.verificationMethod === 'totp-2fa') {
             navigateWithQuery('/signin_totp_code', {

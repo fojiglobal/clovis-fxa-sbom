@@ -8,6 +8,7 @@ import {
   syncDesktopOAuthQueryParams,
 } from '../../lib/query-params';
 import { getTotpCode } from '../../lib/totp';
+import { FirefoxCommand, LinkAccountResponse } from '../../lib/channels';
 
 test.describe('severity-1 #smoke', () => {
   test.describe('Passwordless authentication', () => {
@@ -1098,4 +1099,261 @@ test.describe('severity-2', () => {
       await expect(page).toHaveURL(/signup/);
     });
   });
+
+  test.describe('Sync Account Merge Warning', () => {
+    test('passwordless code signin with merge warning accepted', async ({
+      target,
+      syncOAuthBrowserPages: { page, signin, signinPasswordlessCode },
+      testAccountTracker,
+    }) => {
+      // Create passwordless account via API
+      const { email, password } = testAccountTracker.generateAccountDetails();
+      await target.authClient.passwordlessSendCode(email, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+      const code = await target.emailClient.getPasswordlessSignupCode(email);
+      await target.authClient.passwordlessConfirmCode(email, code, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+
+      // Mock merge warning response (ok: true = user accepts merge)
+      const mergeWarningAccept: LinkAccountResponse = {
+        id: 'account_updates',
+        message: {
+          command: FirefoxCommand.LinkAccount,
+          data: { ok: true },
+        },
+      };
+
+      // Start Sync signin flow
+      await page.goto(
+        `${target.contentServerUrl}/?context=fx_desktop_v3&service=sync&action=email`
+      );
+      await signin.fillOutEmailFirstForm(email);
+
+      // Should redirect to passwordless code page
+      await expect(page).toHaveURL(/signin_passwordless_code/);
+
+      // Setup merge warning response before entering code
+      await signinPasswordlessCode.respondToWebChannelMessage(
+        mergeWarningAccept
+      );
+
+      // Enter OTP code
+      const signinCode =
+        await target.emailClient.getPasswordlessSigninCode(email);
+      await signinPasswordlessCode.fillOutCodeForm(signinCode);
+
+      // Verify merge warning (can_link_account) was sent
+      await signinPasswordlessCode.checkWebChannelMessage(
+        FirefoxCommand.LinkAccount
+      );
+
+      // Should navigate to set password (Sync requires password)
+      await expect(page).toHaveURL(
+        /post_verify\/third_party_auth\/set_password/
+      );
+    });
+
+    test('passwordless code signin with merge warning rejected', async ({
+      target,
+      syncOAuthBrowserPages: { page, signin, signinPasswordlessCode },
+      testAccountTracker,
+    }) => {
+      // Create passwordless account via API
+      const { email } = testAccountTracker.generateAccountDetails();
+      await target.authClient.passwordlessSendCode(email, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+      const code = await target.emailClient.getPasswordlessSignupCode(email);
+      await target.authClient.passwordlessConfirmCode(email, code, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+
+      // Mock merge warning response (ok: false = user rejects merge)
+      const mergeWarningReject: LinkAccountResponse = {
+        id: 'account_updates',
+        message: {
+          command: FirefoxCommand.LinkAccount,
+          data: { ok: false },
+        },
+      };
+
+      // Start Sync signin flow
+      await page.goto(
+        `${target.contentServerUrl}/?context=fx_desktop_v3&service=sync&action=email`
+      );
+      await signin.fillOutEmailFirstForm(email);
+
+      // Should redirect to passwordless code page
+      await expect(page).toHaveURL(/signin_passwordless_code/);
+
+      // Setup merge warning response before entering code
+      await signinPasswordlessCode.respondToWebChannelMessage(
+        mergeWarningReject
+      );
+
+      // Enter OTP code
+      const signinCode =
+        await target.emailClient.getPasswordlessSigninCode(email);
+      await signinPasswordlessCode.fillOutCodeForm(signinCode);
+
+      // Verify merge warning (can_link_account) was sent
+      await signinPasswordlessCode.checkWebChannelMessage(
+        FirefoxCommand.LinkAccount
+      );
+
+      // Should be redirected back to index with error message
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.getByText(/Login attempt cancelled/i)).toBeVisible();
+    });
+
+    test('cached passwordless signin with merge warning accepted', async ({
+      target,
+      syncOAuthBrowserPages: { page, signin, signinPasswordlessCode },
+      testAccountTracker,
+    }) => {
+      // Create passwordless account and complete initial signin to cache session
+      const { email } = testAccountTracker.generateAccountDetails();
+      await target.authClient.passwordlessSendCode(email, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+      const code = await target.emailClient.getPasswordlessSignupCode(email);
+      const result = await target.authClient.passwordlessConfirmCode(
+        email,
+        code,
+        {
+          clientId: 'dcdb5ae7add825d2',
+        }
+      );
+
+      // Store session in localStorage to simulate cached signin
+      await page.goto(target.contentServerUrl);
+      await page.evaluate(
+        ({ email, uid, sessionToken }) => {
+          localStorage.setItem('__fxa_storage.currentAccountUid', uid);
+          localStorage.setItem(
+            `__fxa_storage.accounts`,
+            JSON.stringify({
+              [uid]: {
+                email,
+                sessionToken,
+                uid,
+                verified: true,
+              },
+            })
+          );
+        },
+        {
+          email,
+          uid: result.uid,
+          sessionToken: result.sessionToken,
+        }
+      );
+
+      // Mock merge warning response (ok: true = user accepts merge)
+      const mergeWarningAccept: LinkAccountResponse = {
+        id: 'account_updates',
+        message: {
+          command: FirefoxCommand.LinkAccount,
+          data: { ok: true },
+        },
+      };
+
+      // Navigate to Sync signin - should show cached signin view
+      await page.goto(
+        `${target.contentServerUrl}/?context=fx_desktop_v3&service=sync&action=email&email=${encodeURIComponent(email)}`
+      );
+      await expect(signin.cachedSigninHeading).toBeVisible();
+      await expect(page.getByText(email)).toBeVisible();
+
+      // Setup merge warning response before clicking sign in
+      await signin.respondToWebChannelMessage(mergeWarningAccept);
+
+      // Click the cached signin button
+      await signin.signInButton.click();
+
+      // Verify merge warning (can_link_account) was sent
+      await signin.checkWebChannelMessage(FirefoxCommand.LinkAccount);
+
+      // Should navigate to set password (Sync requires password for passwordless accounts)
+      await expect(page).toHaveURL(
+        /post_verify\/third_party_auth\/set_password/
+      );
+    });
+
+    test('cached passwordless signin with merge warning rejected', async ({
+      target,
+      syncOAuthBrowserPages: { page, signin, signinPasswordlessCode },
+      testAccountTracker,
+    }) => {
+      // Create passwordless account and complete initial signin to cache session
+      const { email } = testAccountTracker.generateAccountDetails();
+      await target.authClient.passwordlessSendCode(email, {
+        clientId: 'dcdb5ae7add825d2',
+      });
+      const code = await target.emailClient.getPasswordlessSignupCode(email);
+      const result = await target.authClient.passwordlessConfirmCode(
+        email,
+        code,
+        {
+          clientId: 'dcdb5ae7add825d2',
+        }
+      );
+
+      // Store session in localStorage to simulate cached signin
+      await page.goto(target.contentServerUrl);
+      await page.evaluate(
+        ({ email, uid, sessionToken }) => {
+          localStorage.setItem('__fxa_storage.currentAccountUid', uid);
+          localStorage.setItem(
+            `__fxa_storage.accounts`,
+            JSON.stringify({
+              [uid]: {
+                email,
+                sessionToken,
+                uid,
+                verified: true,
+              },
+            })
+          );
+        },
+        {
+          email,
+          uid: result.uid,
+          sessionToken: result.sessionToken,
+        }
+      );
+
+      // Mock merge warning response (ok: false = user rejects merge)
+      const mergeWarningReject: LinkAccountResponse = {
+        id: 'account_updates',
+        message: {
+          command: FirefoxCommand.LinkAccount,
+          data: { ok: false },
+        },
+      };
+
+      // Navigate to Sync signin - should show cached signin view
+      await page.goto(
+        `${target.contentServerUrl}/?context=fx_desktop_v3&service=sync&action=email&email=${encodeURIComponent(email)}`
+      );
+      await expect(signin.cachedSigninHeading).toBeVisible();
+      await expect(page.getByText(email)).toBeVisible();
+
+      // Setup merge warning response before clicking sign in
+      await signin.respondToWebChannelMessage(mergeWarningReject);
+
+      // Click the cached signin button
+      await signin.signInButton.click();
+
+      // Verify merge warning (can_link_account) was sent
+      await signin.checkWebChannelMessage(FirefoxCommand.LinkAccount);
+
+      // Should be redirected back to index with error message
+      await expect(page).toHaveURL(/\/$/);
+      await expect(page.getByText(/Login attempt cancelled/i)).toBeVisible();
+    });
+  });
 });
+
