@@ -299,26 +299,12 @@ commands:
           name: Wait for Customs
           command: yarn workspace fxa-customs-server start
 
-  ensure-glean-venv:
-    steps:
-      - run:
-          name: Ensure Python venv has pip and glean_parser
-          command: |
-            set -euxo pipefail
-
-            rm -rf .venv
-            python3 -m venv .venv
-            . .venv/bin/activate
-
-            pip install --upgrade 'glean_parser~=14.5'
-
   lint:
     parameters:
       nx_run:
         type: string
         default: run-many
     steps:
-      - ensure-glean-venv
       - run:
           name: Linting
           command: npx nx << parameters.nx_run >> --parallel=1 -t lint
@@ -329,7 +315,6 @@ commands:
         type: string
         default: run-many
     steps:
-      - ensure-glean-venv
       - run:
           name: Pre building shared libraries
           command: NODE_OPTIONS="--max-old-space-size=7168" npx nx run-many -t build --projects=tag:scope:shared:lib --parallel=2 --verbose
@@ -443,7 +428,6 @@ commands:
         type: string
         default: run-many
     steps:
-      - ensure-glean-venv
       - run:
           name: Build
           command: NODE_OPTIONS="--max-old-space-size=7168" npx nx << parameters.nx_run >> -t build --parallel=2 --all --verbose
@@ -728,7 +712,6 @@ jobs:
       - git-checkout
       - restore-workspace
       - gcp-cli/setup
-      - ensure-glean-venv
       - run:
           name: Build shared libs
           command: NODE_OPTIONS="--max-old-space-size=7168" npx nx run-many -t build --projects=tag:scope:shared:lib --parallel=2
@@ -868,7 +851,6 @@ jobs:
             sudo tee -a /etc/hosts \<<<'127.0.0.1 localhost'
             sudo cat /etc/hosts
       - wait-for-infrastructure
-      - ensure-glean-venv
       - run:
           name: Start services for playwright tests
           command: ./packages/functional-tests/scripts/start-services.sh
