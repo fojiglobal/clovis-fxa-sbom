@@ -181,6 +181,92 @@ export class PasskeyService {
   }
 
   /**
+   * Returns all passkeys for a user, ordered by createdAt descending.
+   *
+   * @param uid - User ID (16-byte Buffer)
+   * @returns Array of passkeys belonging to the user
+   */
+  async listPasskeysForUser(uid: Buffer): Promise<Passkey[]> {
+    const passkeys = await this.passkeyManager.listPasskeysForUser(uid);
+    this.metrics.increment('passkey.list.success');
+    return passkeys;
+  }
+
+  /**
+   * Updates the friendly name for a passkey, ensuring the passkey belongs to the user.
+   * The name is trimmed before validation and storage.
+   *
+   * @param uid - User ID (16-byte Buffer)
+   * @param credentialId - Credential ID of the passkey to rename
+   * @param newName - New display name for the passkey
+   * @throws {AppError} (passkeyInvalidName) - when name is empty, whitespace-only, or exceeds 255 chars
+   * @throws {AppError} (passkeyNotFound) - when passkey does not exist or does not belong to the user
+   */
+  async renamePasskey(
+    uid: Buffer,
+    credentialId: Buffer,
+    newName: string
+  ): Promise<void> {
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed.length > 255) {
+      throw AppError.passkeyInvalidName();
+    }
+    let updated = false;
+    try {
+      updated = await this.passkeyManager.renamePasskey(
+        uid,
+        credentialId,
+        trimmed
+      );
+    } catch (err) {
+      Sentry.captureException(err);
+      this.metrics.increment('passkey.rename.failed', {
+        reason: 'dbError',
+      });
+      throw AppError.passkeyRenameFailed();
+    }
+    if (!updated) {
+      this.metrics.increment('passkey.rename.failed', {
+        reason: 'notFound',
+      });
+      throw AppError.passkeyNotFound();
+    }
+
+    this.metrics.increment('passkey.rename.success');
+    this.log?.log('passkey.renamed', { uid: uid.toString('hex') });
+  }
+
+  /**
+   * Deletes a passkey, ensuring the passkey belongs to the user.
+   *
+   * @param uid - User ID (16-byte Buffer)
+   * @param credentialId - Credential ID of the passkey to delete
+   * @throws {AppError} (passkeyNotFound) - when passkey does not exist or does not belong to the user
+   * @throws {AppError} (passkeyDeleteFailed) - when a database error occurs during deletion
+   */
+  async deletePasskey(uid: Buffer, credentialId: Buffer): Promise<void> {
+    let deleted = false;
+    try {
+      deleted = await this.passkeyManager.deletePasskey(uid, credentialId);
+    } catch (err) {
+      Sentry.captureException(err);
+      this.metrics.increment('passkey.delete.failed', {
+        reason: 'dbError',
+      });
+      throw AppError.passkeyDeleteFailed();
+    }
+    if (!deleted) {
+      this.metrics.increment('passkey.delete.failed', {
+        reason: 'notFound',
+      });
+      throw AppError.passkeyNotFound();
+    }
+
+    this.metrics.increment('passkey.delete.success');
+    this.log?.log('passkey.deleted', { uid: uid.toString('hex') });
+  }
+
+  /**
    * Generate a unique auto-name for a newly registered passkey.
    *
    * Determines a base name from the authenticator metadata, then appends
@@ -257,14 +343,4 @@ export class PasskeyService {
   // TODO: Add methods for passkey operations such as:
   // - generateAuthenticationChallenge
   // - verifyAuthenticationResponse (extract backup state, signCount, validate rollback)
-  // - listPasskeysForUser
-  // - renamePasskey
-  // - deletePasskey
-  //
-  // TODO: Add signCount rollback detection in verifyAuthenticationResponse():
-  //   - Fetch existing passkey with current signCount
-  //   - Compare new signCount from authenticator response
-  //   - If new < old AND old > 0: Log security warning (potential cloning attack)
-  //   - Allow authenticators that always return 0 (batch attestation per spec)
-  //   - Log event: 'passkey.signCount.rollback' with uid, credentialId, oldCount, newCount
 }
