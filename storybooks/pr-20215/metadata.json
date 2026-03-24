@@ -1,0 +1,11 @@
+{
+  "commit": "23870c67fef144b870acaa646722a3d997ef4903",
+  "summary": "feat(payments-next): use LoggerService within TypeCachable decorators Because:",
+  "description": "* The LoggerService provides much more useful data for debugging issues, and was not being used in the TypeCachable decorator\n\nThis commit:\n\n* Adds the requirement for the LoggerService to be present on the consuming classes of the TypeCachable decorators\n* Moves the cacheManager excludeContext call out of the strapi client and into the type-cachable barrel file, as it's now needed in several places\n* Updates the consuming classes to pass the LoggerService through to the decorator\n\nCloses #PAY-3571",
+  "timestamp": 1774040058000,
+  "storybooks": [
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

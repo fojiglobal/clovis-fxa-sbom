@@ -1,0 +1,12 @@
+{
+  "commit": "b61d66b4196c9be48324d2083e6b52b3480ff708",
+  "summary": "chore(): update apollo server",
+  "description": "",
+  "timestamp": 1773777962000,
+  "storybooks": [
+    "email-renderer",
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

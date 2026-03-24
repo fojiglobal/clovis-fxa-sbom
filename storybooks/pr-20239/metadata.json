@@ -1,0 +1,10 @@
+{
+  "commit": "2b7121bbdcc740a6e738050da8314236be849d5a",
+  "summary": "feat(passkeys): Add passkey generate and validate challenge methods",
+  "description": "Because:\n- We need to expose basic passkey service management\n\nThis Commit:\n- Adds passkey service functions for list, delete, and rename\n- Adds tests for new service functions\n\nCloses: FXA-13063",
+  "timestamp": 1774296590000,
+  "storybooks": [
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

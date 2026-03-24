@@ -1,0 +1,12 @@
+{
+  "commit": "10969e6ec89a679cf874e9d365abe02d1a5d0e8e",
+  "summary": "chore(deps-dev): bump mailparser",
+  "description": "Bumps the npm_and_yarn group with 1 update in the /packages/fxa-auth-server directory: [mailparser](https://github.com/nodemailer/mailparser).\n\nUpdates `mailparser` from 0.6.1 to 3.9.3\n- [Release notes](https://github.com/nodemailer/mailparser/releases)\n- [Changelog](https://github.com/nodemailer/mailparser/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/nodemailer/mailparser/compare/v0.6.1...v3.9.3)\n\n---\nupdated-dependencies:\n- dependency-name: mailparser\n  dependency-version: 3.9.3\n  dependency-type: direct:development\n  dependency-group: npm_and_yarn\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>",
+  "timestamp": 1774046048000,
+  "storybooks": [
+    "email-renderer",
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

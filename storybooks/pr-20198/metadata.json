@@ -1,0 +1,11 @@
+{
+  "commit": "48cd05926ce42561261329ecdc0bb186a1cf251f",
+  "summary": "feat(settings): put Vijay's dark mode behind feature flag",
+  "description": "Because:\n\n* we want to put dark mode on stage\n\nThis Commit:\n\n* Rebases Vijay's dark mode branch onto latest main and put it behind the feature flag.\n* enables theme selection in storybook\n\nCloses: FXA-13026 FXA-13027\n\nCo-authored-by: Vijay Budhram <vbudhram@gmail.com>",
+  "timestamp": 1774024472000,
+  "storybooks": [
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

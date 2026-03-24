@@ -1,0 +1,12 @@
+{
+  "commit": "345e6c987e35761befe5e41202862d4ae5888cd7",
+  "summary": "chore(deps): bump next from 14.2.35 to 15.5.14",
+  "description": "Bumps next from 14.2.35 to 15.5.14. Updates all payments-next code\nfor Next.js 15 breaking changes:\n- Server Actions must be async functions\n- headers() and cookies() are now async\n- params and searchParams in page/layout components are Promise-wrapped\n- useParams() return type includes undefined values\n- Widened param/searchParams types across actions and utilities",
+  "timestamp": 1774022830000,
+  "storybooks": [
+    "email-renderer",
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}

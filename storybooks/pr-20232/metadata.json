@@ -1,0 +1,12 @@
+{
+  "commit": "9969318a4338f54ee9c5810e8f3b7310bfe83240",
+  "summary": "chore: update node-convict dependency",
+  "description": "",
+  "timestamp": 1774042951000,
+  "storybooks": [
+    "email-renderer",
+    "fxa-react",
+    "fxa-settings"
+  ],
+  "deployDir": "deploy/"
+}
